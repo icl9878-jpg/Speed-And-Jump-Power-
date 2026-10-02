@@ -1,0 +1,241 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "MovementControlGUI"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Main window
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 330, 0, 300)
+main.Position = UDim2.new(0.5, -165, 0.5, -150)
+main.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
+main.BorderSizePixel = 0
+main.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 14)
+corner.Parent = main
+
+-- Top bar
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 50)
+topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+topBar.BorderSizePixel = 0
+topBar.Parent = main
+
+local topCorner = Instance.new("UICorner")
+topCorner.CornerRadius = UDim.new(0, 14)
+topCorner.Parent = topBar
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -100, 1, 0)
+title.Position = UDim2.new(0, 15, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "⚡ Movement Control"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 20
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = topBar
+
+-- Minimize button
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.new(0, 40, 0, 40)
+minimize.Position = UDim2.new(1, -90, 0, 5)
+minimize.Text = "—"
+minimize.TextSize = 24
+minimize.TextColor3 = Color3.new(1, 1, 1)
+minimize.BackgroundColor3 = Color3.fromRGB(55, 55, 68)
+minimize.Parent = topBar
+
+Instance.new("UICorner", minimize).CornerRadius = UDim.new(0, 8)
+
+-- Close button
+local close = Instance.new("TextButton")
+close.Size = UDim2.new(0, 40, 0, 40)
+close.Position = UDim2.new(1, -45, 0, 5)
+close.Text = "X"
+close.TextSize = 18
+close.TextColor3 = Color3.new(1, 1, 1)
+close.BackgroundColor3 = Color3.fromRGB(180, 55, 65)
+close.Parent = topBar
+
+Instance.new("UICorner", close).CornerRadius = UDim.new(0, 8)
+
+-- Function to create labels
+local function createLabel(text, position)
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -40, 0, 25)
+	label.Position = position
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = Color3.fromRGB(220, 220, 230)
+	label.TextSize = 16
+	label.Font = Enum.Font.GothamSemibold
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = main
+	return label
+end
+
+-- Speed
+createLabel("Walk Speed", UDim2.new(0, 20, 0, 70))
+
+local speedBox = Instance.new("TextBox")
+speedBox.Size = UDim2.new(1, -40, 0, 42)
+speedBox.Position = UDim2.new(0, 20, 0, 98)
+speedBox.Text = "16"
+speedBox.PlaceholderText = "Enter speed..."
+speedBox.TextColor3 = Color3.new(1, 1, 1)
+speedBox.BackgroundColor3 = Color3.fromRGB(45, 45, 58)
+speedBox.TextSize = 17
+speedBox.Font = Enum.Font.Gotham
+speedBox.ClearTextOnFocus = false
+speedBox.Parent = main
+
+Instance.new("UICorner", speedBox).CornerRadius = UDim.new(0, 8)
+
+-- Jump
+createLabel("Jump Power", UDim2.new(0, 20, 0, 150))
+
+local jumpBox = Instance.new("TextBox")
+jumpBox.Size = UDim2.new(1, -40, 0, 42)
+jumpBox.Position = UDim2.new(0, 20, 0, 178)
+jumpBox.Text = "50"
+jumpBox.PlaceholderText = "Enter jump power..."
+jumpBox.TextColor3 = Color3.new(1, 1, 1)
+jumpBox.BackgroundColor3 = Color3.fromRGB(45, 45, 58)
+jumpBox.TextSize = 17
+jumpBox.Font = Enum.Font.Gotham
+jumpBox.ClearTextOnFocus = false
+jumpBox.Parent = main
+
+Instance.new("UICorner", jumpBox).CornerRadius = UDim.new(0, 8)
+
+-- Apply button
+local apply = Instance.new("TextButton")
+apply.Size = UDim2.new(0.58, 0, 0, 42)
+apply.Position = UDim2.new(0, 20, 0, 235)
+apply.Text = "✓  APPLY"
+apply.TextSize = 16
+apply.Font = Enum.Font.GothamBold
+apply.TextColor3 = Color3.new(1, 1, 1)
+apply.BackgroundColor3 = Color3.fromRGB(55, 140, 90)
+apply.Parent = main
+
+Instance.new("UICorner", apply).CornerRadius = UDim.new(0, 8)
+
+-- Reset button
+local reset = Instance.new("TextButton")
+reset.Size = UDim2.new(0.3, 0, 0, 42)
+reset.Position = UDim2.new(0.68, 0, 0, 235)
+reset.Text = "RESET"
+reset.TextSize = 14
+reset.Font = Enum.Font.GothamBold
+reset.TextColor3 = Color3.new(1, 1, 1)
+reset.BackgroundColor3 = Color3.fromRGB(70, 70, 85)
+reset.Parent = main
+
+Instance.new("UICorner", reset).CornerRadius = UDim.new(0, 8)
+
+-- Apply movement settings
+local function updateMovement()
+	local character = player.Character
+	if not character then return end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+
+	local speed = tonumber(speedBox.Text)
+	local jump = tonumber(jumpBox.Text)
+
+	if speed then
+		humanoid.WalkSpeed = math.clamp(speed, 0, 100)
+	end
+
+	if jump then
+		humanoid.UseJumpPower = true
+		humanoid.JumpPower = math.clamp(jump, 0, 200)
+	end
+end
+
+apply.MouseButton1Click:Connect(updateMovement)
+
+-- Reset
+reset.MouseButton1Click:Connect(function()
+	speedBox.Text = "16"
+	jumpBox.Text = "50"
+	updateMovement()
+end)
+
+-- Close
+close.MouseButton1Click:Connect(function()
+	gui.Enabled = false
+end)
+
+-- Minimize
+local minimized = false
+
+minimize.MouseButton1Click:Connect(function()
+	minimized = not minimized
+
+	for _, child in ipairs(main:GetChildren()) do
+		if child ~= topBar and child ~= corner then
+			child.Visible = not minimized
+		end
+	end
+
+	if minimized then
+		main.Size = UDim2.new(0, 330, 0, 50)
+	else
+		main.Size = UDim2.new(0, 330, 0, 300)
+	end
+end)
+
+-- DRAGGING
+local dragging = false
+local dragStart
+local startPosition
+
+topBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+
+		dragging = true
+		dragStart = input.Position
+		startPosition = main.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if not dragging then return end
+
+	if input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch then
+
+		local delta = input.Position - dragStart
+
+		main.Position = UDim2.new(
+			startPosition.X.Scale,
+			startPosition.X.Offset + delta.X,
+			startPosition.Y.Scale,
+			startPosition.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-- Reapply after respawn
+player.CharacterAdded:Connect(function()
+	task.wait(0.5)
+	updateMovement()
+end)
